@@ -138,7 +138,7 @@ const Waveform = () => {
 
         await dispatch(pullPlaylists({ user: loadedUser.id })).unwrap();
 
-        initWebSocket('ws://192.168.85.33:80/download-progress');
+        initWebSocket('ws://192.168.1.44:80/download-progress');
         const ws = getWebSocket();
 
         ws.onopen = () => {

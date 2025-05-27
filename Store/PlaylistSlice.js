@@ -117,12 +117,11 @@ const PlaylistSlice = createSlice({
                 console.error("Playlists taken")
 
             })
-            .addCase(AddNewPlaylistwithmusic.fulfilled, (state, action) => {
-
-
-                console.log("Playlists added");
-
+            .addCase(addMusictoPlaylist.fulfilled, (state, action) => {
+                const response = action.payload;
+                console.error(response)
             })
+
 
 
     }
@@ -143,28 +142,30 @@ export const migrate = createAsyncThunk('/migratedata', async ({ Url: data }) =>
 export const AddNewPlaylist = createAsyncThunk('/newplaylist', async ({ data: playlist, userid: userid }) => {
     try {
         console.warn("adding new playlist");
-        const response = await axios.post("http://192.168.1.44/api/NewPlaylists", { playlist: playlist, user: userid })
+        const response = await axios.post("http://192.168.1.44/playlist/NewPlaylists", { playlist: playlist, user: userid })
         return response.data
     }
     catch (e) {
         console.error(e)
     }
 })
-export const AddNewPlaylistwithmusic = createAsyncThunk('/newplaylistwithmusic', async ({ data: value, song: song }) => {
-    try {
-        console.warn("adding new playlist");
-        const response = await axios.post("http://192.168.1.44/api/NewPlaylistswithmusic", { playlist: value, song: song })
-        return response.data
-    }
-    catch (e) {
-        console.error(e)
-    }
-})
+
 export const pullPlaylists = createAsyncThunk('/pullPlaylists', async ({ user: user }) => {
     try {
         console.warn("pulling playlist");
         console.warn("user reached pull: ", user)
-        const response = await axios.post("http://192.168.1.44/api/Playlist", { data: user })
+        const response = await axios.post("http://192.168.1.44/playlist/pullPlaylist", { data: user })
+        return response.data
+    }
+    catch (e) {
+        console.error(e)
+    }
+})
+export const addMusictoPlaylist = createAsyncThunk('/addMusic', async ({ playlist: playlist, user: user, music: music }) => {
+    try {
+        console.warn("pulling playlist");
+        console.warn("user reached pull: ", user)
+        const response = await axios.post("http://192.168.1.44/playlist/addMusic", { playlist: playlist, user: user, music: music })
         return response.data
     }
     catch (e) {
