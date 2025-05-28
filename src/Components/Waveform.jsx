@@ -137,11 +137,10 @@ const Waveform = () => {
         const loadedUser = await dispatch(loadUser()).unwrap(); // Await loadUser thunk
         console.warn("data:", loadedUser);
 
-        await dispatch(pullPlaylists({ user: loadedUser.id })).unwrap();
-
-        initWebSocket(`${
-      Constants.expoConfig.extra.SERVER
-    }/download-progress`);
+        //await dispatch(pullPlaylists({ user: loadedUser.id })).unwrap();
+        // 192.168.85.33 K
+        // 192.168.1.44 krish
+        initWebSocket("ws://192.168.85.33:80/download-progress");
         const ws = getWebSocket();
 
         ws.onopen = () => {
