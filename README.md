@@ -42,7 +42,7 @@ Stay tuned to know more!
 - [x] Offline playback
 - [x] Playlist migration
 - [x] Notification playback support
-- [ ] Persistence using redis
+- [x] Persistence using redis
 - [ ] Collab playlists
 - [ ] Listening to songs from playlist
 - [ ] Mobile builds and beta release
