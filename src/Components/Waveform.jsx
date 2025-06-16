@@ -11,8 +11,8 @@ import { initWebSocket, getWebSocket } from '../Websocket/websocketfunc';
 import { pullPlaylists } from "../../Store/PlaylistSlice";
 import { loadUser } from "../../Store/AuthThunk";
 import Constants from "expo-constants";
-import { fetch } from "@react-native-community/netinfo";
-import { connection } from "../../Store/NetworkSlice";
+import NetInfo, { addEventListener } from "@react-native-community/netinfo";
+import { connection, checked, type } from "../../Store/NetworkSlice";
 
 
 const WaveformLoader = () => {
@@ -99,7 +99,7 @@ const WaveformLoader = () => {
 const Waveform = () => {
   const { Mode } = useSelector((state) => state.theme)
   const { user } = useSelector((state) => state.user)
-  const { isConnected, nettype } = useDispatch((state) => state.network)
+  const { isConnected, nettype, hasChecked } = useDispatch((state) => state.network)
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [deviceName, setDeviceName] = useState(null);
   const hasConnected = useRef(false);
@@ -129,56 +129,69 @@ const Waveform = () => {
       useNativeDriver: true,
     }).start();
   }, []);
+
   useEffect(() => {
     if (!deviceName || hasConnected.current) return;
-
+    console.warn("hey")
     hasConnected.current = true;
 
-    const runAsyncLogic = async () => {
-      const id = Math.random().toString(36).slice(2, 8);
+    NetInfo.fetch().then(state => {
+      console.log("Is connected?", state.isConnected);
+      console.log("Connection type:", state.type);
+      if (state.isConnected) {
+        const runAsyncLogic = async () => {
+          const id = Math.random().toString(36).slice(2, 8);
+          console.error("HI")
+          try {
+            const loadedUser = await dispatch(loadUser()).unwrap(); // Await loadUser thunk
+            console.warn("data:", loadedUser === null);
+            let ws;
+            loadedUser === null ? null : await dispatch(pullPlaylists({ user: loadedUser.id })).unwrap()
+            // 192.168.85.33 K
+            // 192.168.1.44 krish
+            console.error("loader user over")
+            console.error(isConnected)
 
-      try {
-        const loadedUser = await dispatch(loadUser()).unwrap(); // Await loadUser thunk
-        console.warn("data:", loadedUser === null);
-        let ws;
-        loadedUser === null ? null : await dispatch(pullPlaylists({ user: loadedUser.id })).unwrap()
-        // 192.168.85.33 K
-        // 192.168.1.44 krish
-        console.error("loader user over")
-        fetch().then(state => {
-          console.log("Connection type", state.type);
-          console.log("Is connected?", state.isConnected);
-          dispatch(connection(state.isConnected)).unwrap()
-          dispatch(type(state.type)).unwrap()
-        });
-        if (isConnected) {
-          initWebSocket(`${Constants.expoConfig.extra.WEBSOC}/download-progress`)
-          ws = getWebSocket();
+            console.error("reached websocket connection")
+            initWebSocket(`${Constants.expoConfig.extra.WEBSOC}/download-progress`)
+            ws = getWebSocket();
 
-          ws.onopen = () => {
-            console.error("Connected to WebSocket server");
-            dispatch(setClientID({ id }));
+            ws.onopen = () => {
+              console.error("Connected to WebSocket server");
+              dispatch(setClientID({ id }));
 
-            ws.send(JSON.stringify({
-              type: "register",
-              clientId: id,
-              value: "hi"
-            }));
+              ws.send(JSON.stringify({
+                type: "register",
+                clientId: id,
+                value: "hi"
+
+              }));
+              dispatch(setLoading(false));
+
+            };
 
 
-          };
+
+
+
+          } catch (error) {
+            console.error("Failed to load user:", error);
+          }
+
         }
-        else {
-          dispatch(setLoading(false));
-        }
-
-
-      } catch (error) {
-        console.error("Failed to load user:", error);
+        runAsyncLogic();
+      } else {
+        // Show no internet UI or alert
+        dispatch(setLoading(false));
       }
-    };
+    });
 
-    runAsyncLogic();
+
+
+
+
+
+
   }, [deviceName]);
 
 
