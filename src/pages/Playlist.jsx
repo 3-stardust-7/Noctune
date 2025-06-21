@@ -46,7 +46,11 @@ const Playlist = () => {
   const dispatch = useDispatch();
 
     const goToNewPage = () => {
-    navigation.navigate('PlaylistEdit'); // Use the exact name from Stack.Screen
+console.warn("DATA: ", JSON.stringify(data, null, 2));
+data[0].songs.forEach((song, idx) => {
+  console.warn(`Song ${idx + 1}:`, song);
+});
+navigation.navigate('PlaylistEdit', { index });
   };
 
   const styles = StyleSheet.create({

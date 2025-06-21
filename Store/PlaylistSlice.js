@@ -46,7 +46,13 @@ const PlaylistSlice = createSlice({
         },
         changePlaylist(state, action) {
             state.playlistNo = action.payload;
-        }
+        },
+        updatePlaylistData(state, action) {
+  const { index, updatedData } = action.payload;
+  if (state.data[index]) {
+    state.data[index] = { ...state.data[index], ...updatedData };
+  }
+}
     },
     extraReducers: (builder) => {
         builder
@@ -127,7 +133,7 @@ const PlaylistSlice = createSlice({
 
     }
 })
-export const { addPlaylist, addMusicinPlaylist, setPlaylistplaying, changePlaylist } = PlaylistSlice.actions;
+export const { addPlaylist, addMusicinPlaylist, setPlaylistplaying, changePlaylist, updatePlaylistData } = PlaylistSlice.actions;
 export default PlaylistSlice.reducer;
 export const migrate = createAsyncThunk('/migratedata', async ({ Url: data }) => {
     try {

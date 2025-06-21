@@ -9,42 +9,91 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation, useRoute } from "@react-navigation/native";
 //import * as ImagePicker from 'expo-image-picker';
-import DragDropList from 'react-native-reanimated-dnd';
-import BackArrow from "../Components/BackArrow";
-import { updateCompletePlaylist } from "../../Store/PlaylistSlice";
+// Import with proper error handling
+let BackArrow;
+try {
+  BackArrow = require("../Components/BackArrow").default;
+} catch (error) {
+  console.warn('BackArrow component not found, using fallback');
+  BackArrow = () => <Text style={{ color: 'white', fontSize: 18 }}>←</Text>;
+}
+import * as ImagePicker from 'expo-image-picker';
+
+
+// Import existing actions from your PlaylistSlice
+import { 
+  addPlaylist, 
+  addMusicinPlaylist, 
+  setPlaylistplaying, 
+  changePlaylist, 
+  updatePlaylistData 
+} from "../../Store/PlaylistSlice";
+// Conditional import for DragDropList - replace with FlatList if not available
+let DragDropList;
+try {
+  DragDropList = require('react-native-reanimated-dnd').default;
+} catch (error) {
+  console.warn('DragDropList not available, using FlatList');
+  DragDropList = null;
+}
 import icon from "../../assets/icon.png";
 
 const PlaylistEdit = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const route = useRoute();
+  const { index } = route.params;
+
+  // Get playlist data from Redux store
+  const { data } = useSelector((state) => state.playlist);
   
-  // Get playlist data from route params or Redux store
-  const { data,playlistNo } = useSelector((state) => state.playlist);
-  const { playlistIndex } = playlistNo;
-  const playlistData = data[playlistIndex];
+  // Get the specific playlist using the index
+  const playlistData = data && data[index] ? data[index] : null;
 
   // Local state for editing
-  const [editedName, setEditedName] = useState(playlistData?.name || "");
-  const [editedDescription, setEditedDescription] = useState(playlistData?.desc || "");
-  const [editedImage, setEditedImage] = useState(playlistData?.image || "");
-  const [editedSongs, setEditedSongs] = useState(playlistData?.songs || []);
+  const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
+  const [editedImage, setEditedImage] = useState("");
+  const [editedSongs, setEditedSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Initialize state when playlistData is available
+  useEffect(() => {
+    if (playlistData) {
+      setEditedName(playlistData.name || "");
+      setEditedDescription(playlistData.desc || playlistData.description || "");
+      setEditedImage(playlistData.image || "");
+      setEditedSongs(playlistData.songs || []);
+    }
+  }, [playlistData]);
+
   useEffect(() => {
     // Track if there are any changes
-    const nameChanged = editedName !== playlistData?.name;
-    const descChanged = editedDescription !== playlistData?.desc;
-    const imageChanged = editedImage !== playlistData?.image;
-    const songsChanged = JSON.stringify(editedSongs) !== JSON.stringify(playlistData?.songs);
-    
-    setHasChanges(nameChanged || descChanged || imageChanged || songsChanged);
+    if (playlistData) {
+      const nameChanged = editedName !== (playlistData.name || "");
+      const descChanged = editedDescription !== (playlistData.desc || playlistData.description || "");
+      const imageChanged = editedImage !== (playlistData.image || "");
+      const songsChanged = JSON.stringify(editedSongs) !== JSON.stringify(playlistData.songs || []);
+      
+      setHasChanges(nameChanged || descChanged || imageChanged || songsChanged);
+    }
   }, [editedName, editedDescription, editedImage, editedSongs, playlistData]);
+
+  // Early return if playlist data is not available
+  if (!playlistData) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#1DB954" />
+        <Text style={{ color: "white", marginTop: 10 }}>Loading playlist...</Text>
+      </View>
+    );
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -276,17 +325,28 @@ const PlaylistEdit = () => {
 
     setIsLoading(true);
     try {
-      // Dispatch the action to update the complete playlist
-      dispatch(updateCompletePlaylist({
-        index: playlistIndex,
+      // Since your slice doesn't have updateCompletePlaylist, 
+      // we'll manually update the state by creating a new action
+      // or modify the existing data directly
+      
+      // Create a custom action payload that matches your data structure
+      const updatedPlaylist = {
+        ...playlistData,
         name: editedName,
-        description: editedDescription,
+        desc: editedDescription,
         image: editedImage,
         songs: editedSongs,
+        // Recalculate total time based on songs
+        Time: editedSongs.reduce((total, song) => total + (song.duration || 0), 0)
+      };
+
+   // Use the proper action creator
+      dispatch(updatePlaylistData({
+        index: index,
+        updatedData: updatedPlaylist
       }));
 
-      // If you want to sync with backend, you can add an API call here
-      // await updatePlaylistOnServer(playlistIndex, { name: editedName, description: editedDescription, image: editedImage, songs: editedSongs });
+      console.warn('Updated playlist:', updatedPlaylist);
       
       Alert.alert(
         "Success",
@@ -300,7 +360,7 @@ const PlaylistEdit = () => {
       );
     } catch (error) {
       console.error('Error saving playlist:', error);
-      Alert.alert('Error', 'Failed to save changes. Please try again.');
+      Alert.alert('Error', `Failed to save changes: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -343,7 +403,7 @@ const PlaylistEdit = () => {
           {item.title}
         </Text>
         <Text numberOfLines={1} style={styles.songArtist}>
-          {item.uploader}
+          {item.uploader || item.artist}
         </Text>
       </View>
       
@@ -355,6 +415,20 @@ const PlaylistEdit = () => {
       </TouchableOpacity>
     </View>
   );
+
+  // Get the image source for the playlist
+  const getImageSource = () => {
+    if (editedImage) {
+      return { uri: editedImage };
+    }
+    if (playlistData.image) {
+      return { uri: playlistData.image };
+    }
+    if (playlistData.songs && playlistData.songs.length > 0 && playlistData.songs[0].image) {
+      return { uri: playlistData.songs[0].image };
+    }
+    return icon;
+  };
 
   return (
     <View style={styles.container}>
@@ -369,7 +443,7 @@ const PlaylistEdit = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={discardChanges}>
-            <BackArrow />
+            {BackArrow ? <BackArrow /> : <Text style={{ color: 'white', fontSize: 18 }}>←</Text>}
           </TouchableOpacity>
           
           <Text style={styles.headerTitle}>Edit Playlist</Text>
@@ -396,17 +470,12 @@ const PlaylistEdit = () => {
 
         {/* Image Section */}
         <View style={styles.imageSection}>
-                   <Image
-         source={
-           data.image
-             ? { uri: data.image }
-             : data.songs?.[0]?.image
-             ? { uri: data.songs[0].image }
-             : icon
-         }
+          <Image
+            source={getImageSource()}
             style={styles.playlistImage}
             defaultSource={require('../../assets/favicon.png')}
           />
+
           <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
             <Text style={styles.changeImageText}>Change Image</Text>
           </TouchableOpacity>
@@ -454,12 +523,20 @@ const PlaylistEdit = () => {
                 No songs in this playlist.{'\n'}Add some songs to get started!
               </Text>
             </View>
-          ) : (
+          ) : DragDropList ? (
             <DragDropList
               data={editedSongs}
               keyExtractor={(item) => item.id.toString()}
               onReorder={handleSongReorder}
               renderItem={renderSongItem}
+            />
+          ) : (
+            // Fallback to FlatList if DragDropList is not available
+            <FlatList
+              data={editedSongs}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderSongItem}
+              scrollEnabled={false}
             />
           )}
         </View>
