@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
   ActivityIndicator,
   FlatList,
 } from "react-native";
@@ -22,7 +21,7 @@ try {
   console.warn('BackArrow component not found, using fallback');
   BackArrow = () => <Text style={{ color: 'white', fontSize: 18 }}>←</Text>;
 }
-import * as ImagePicker from 'expo-image-picker';
+//import * as ImagePicker from 'expo-image-picker';
 
 
 // Import existing actions from your PlaylistSlice
@@ -348,16 +347,8 @@ const PlaylistEdit = () => {
 
       console.warn('Updated playlist:', updatedPlaylist);
       
-      Alert.alert(
-        "Success",
-        "Playlist updated successfully!",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      navigation.goBack();
+
     } catch (error) {
       console.error('Error saving playlist:', error);
       Alert.alert('Error', `Failed to save changes: ${error.message}`);
