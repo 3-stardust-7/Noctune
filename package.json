@@ -44,6 +44,7 @@
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-paper": "^5.13.1",
     "react-native-reanimated": "~3.16.1",
+    "react-native-reanimated-dnd": "^1.1.0",
     "react-native-saf-x": "^2.2.3",
     "react-native-safe-area-context": "^4.14.1",
     "react-native-screens": "~4.4.0",

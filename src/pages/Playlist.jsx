@@ -45,6 +45,10 @@ const Playlist = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
+    const goToNewPage = () => {
+    navigation.navigate('PlaylistEdit'); // Use the exact name from Stack.Screen
+  };
+
   const styles = StyleSheet.create({
     Main: {
       flex: 1,
@@ -278,6 +282,7 @@ const Playlist = () => {
         handleDownload={handleDownload}
         DownloadButton={DownloadButton}
         Description={Description}
+        goToNewPage={goToNewPage}
       />
       <Flatlist data={data[index].songs || []} styles={styles} />
     </ScrollView>
@@ -297,6 +302,7 @@ const Information = ({
   handleDownload,
   DownloadButton,
   Description,
+  goToNewPage,
 }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -392,7 +398,7 @@ const Information = ({
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.funcbutton, { marginRight: 15 }]}
-                onPress={openModal}
+                onPress={goToNewPage}
               >
                 <ThreeDots />
               </TouchableOpacity>

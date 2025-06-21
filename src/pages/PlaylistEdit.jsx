@@ -16,6 +16,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import DragDropList from 'react-native-reanimated-dnd';
 import BackArrow from "../Components/BackArrow";
 import { updateCompletePlaylist } from "../../Store/PlaylistSlice";
+import icon from "../../assets/icon.png";
 
 const PlaylistEdit = () => {
   const navigation = useNavigation();
@@ -23,8 +24,8 @@ const PlaylistEdit = () => {
   const route = useRoute();
   
   // Get playlist data from route params or Redux store
-  const { playlistIndex } = route.params;
-  const { data } = useSelector((state) => state.playlist);
+  const { data,playlistNo } = useSelector((state) => state.playlist);
+  const { playlistIndex } = playlistNo;
   const playlistData = data[playlistIndex];
 
   // Local state for editing
@@ -395,10 +396,14 @@ const PlaylistEdit = () => {
 
         {/* Image Section */}
         <View style={styles.imageSection}>
-          <Image 
-            source={{ 
-              uri: editedImage || (editedSongs.length > 0 ? editedSongs[0].image : '') 
-            }} 
+                   <Image
+         source={
+           data.image
+             ? { uri: data.image }
+             : data.songs?.[0]?.image
+             ? { uri: data.songs[0].image }
+             : icon
+         }
             style={styles.playlistImage}
             defaultSource={require('../../assets/favicon.png')}
           />
