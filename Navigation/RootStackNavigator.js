@@ -24,9 +24,14 @@ const RootNavigator = () => {
         getComponent={() => require("../src/pages/PlaylistChoose").default}
       />
       <Stack.Screen
+        name="Sync"
+        options={{animation:"fade"}}
+        getComponent={() => require("../src/pages/Sync").default}
+      />
+      <Stack.Screen
         name="Migrate"
         options={{animation:"fade"}}
-        getComponent={() => require("../src/pages/MigratePlaylist").default}
+        getComponent={() => require("../src/pages/Sync").default}
       />
       <Stack.Screen
         name="Download"

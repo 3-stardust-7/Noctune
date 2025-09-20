@@ -4,7 +4,7 @@ import { signIn, signUp, signOut, loadUser } from './AuthThunk';
 const userSlice = createSlice({
   name: 'user',
   initialState: {
-    user: null,
+    user: true,
     session: null,
     loading: false,   //krish set to true
     waveload: true,
